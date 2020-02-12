@@ -1,3 +1,5 @@
+mod color_parser;
+
 use std::error::Error;
 use serenity::client::Client;
 use serenity::model::{
@@ -40,18 +42,11 @@ pub fn init(token: &String) -> Client {
 }
 
 #[command]
-fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
-    msg.reply(ctx, "Pong!")?;
-
-    Ok(())
-}
-
-#[command]
 fn color(ctx: &mut Context, msg: &Message) -> CommandResult {
 
     match user_has_existing_color_role(ctx, msg) {
         Some(role_id) => {
-            let colour = parse_color(&msg.content);
+            let colour = color_parser::parse_color(&msg.content);
 
             if let Some(guild_id) = msg.guild_id {
                 if let Err(e) = edit_role(ctx, &guild_id, &role_id, colour) {
@@ -62,7 +57,7 @@ fn color(ctx: &mut Context, msg: &Message) -> CommandResult {
         None => {
             let name = &msg.author.name;
             let role_name = format!("{}'s color", name);
-            let colour = parse_color(&msg.content);
+            let colour = color_parser::parse_color(&msg.content);
     
             
             if let Some(guild_id) = msg.guild_id {
@@ -79,10 +74,6 @@ fn color(ctx: &mut Context, msg: &Message) -> CommandResult {
     }
     
     Ok(())
-}
-
-fn parse_color(msg: &str) -> Colour {
-    Colour::DARK_RED
 }
 
 fn user_has_existing_color_role(ctx: &mut Context, msg: &Message) -> Option<RoleId> {
