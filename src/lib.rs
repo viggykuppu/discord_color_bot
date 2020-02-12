@@ -1,5 +1,9 @@
+use std::error::Error;
 use serenity::client::Client;
-use serenity::model::channel::Message;
+use serenity::model::{
+    channel::Message,
+    id::GuildId
+};
 use serenity::prelude::{EventHandler, Context};
 use serenity::framework::standard::{
     CommandResult,
@@ -9,6 +13,7 @@ use serenity::framework::standard::{
         group
     }
 };
+use serenity::utils::Colour;
 
 #[group]
 #[commands(ping,color)]
@@ -36,11 +41,20 @@ fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
 
 #[command]
 fn color(ctx: &mut Context, msg: &Message) -> CommandResult {
-    let author = msg.author;
+    let name = "test-role";
+    let colour = Colour::BLITZ_BLUE;
 
-    if let Some(guild) = msg.guild_id {
-        guild.create_role(ctx, |r| r.hoist(true).name("role"));
+    if let Some(guild_id) = msg.guild_id {
+        if let Err(e) = create_role(ctx, guild_id, name, colour) {
+            eprintln!("Error creating role: {}",e);
+        }
     }
     
+    Ok(())
+}
+
+fn create_role(ctx: &mut Context, guild: GuildId, name: &str, colour: Colour) -> Result<(),Box<dyn Error>> {
+    guild.create_role(ctx, |r| r.hoist(true).name(name).colour(colour.0 as u64))?;
+
     Ok(())
 }
