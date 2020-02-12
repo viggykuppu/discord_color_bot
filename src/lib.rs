@@ -25,7 +25,7 @@ use serenity::framework::standard::{
 use serenity::utils::Colour;
 
 #[group]
-#[commands(ping,color)]
+#[commands(color)]
 struct General;
 
 struct Handler;
