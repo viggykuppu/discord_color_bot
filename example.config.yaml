@@ -1,7 +1,11 @@
 # This is an example YAML file that outlines the possible config values
 # Copy this to config.yaml to actually use it
 
-# Default prefix is ! if none is supplied
+# Optional, Default prefix is ! if none is supplied
 prefix: "*"
-# Required value
+# Required, Discord API Token
 token: <token goes here>
+# Optional, Array of channel ids to which the bot should listen
+channel_ids: 
+  - <channel_id_1>
+  - <channel_id_2>

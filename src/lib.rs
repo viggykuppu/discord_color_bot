@@ -11,6 +11,7 @@ use serenity::client::Client;
 use serenity::model::{
     channel::Message,
     id::{
+        ChannelId,
         GuildId,
         RoleId,
         UserId
@@ -39,20 +40,21 @@ struct Handler {
 
 impl EventHandler for Handler {
     fn ready(&self, ctx: Context, _data_about_bot: Ready) {
-        ctx.set_activity(Activity::listening("*help"))
+        ctx.set_activity(Activity::listening(&format!("{}help", &self.cfg.prefix)))
     }
 }
 
 pub fn run(cfg: BotConfig) -> Result<(), serenity::Error> {
-    let handler = Handler { cfg };
-    let token = handler.cfg.token.clone();
-    let prefix = handler.cfg.prefix.clone();
+    let token = cfg.token.clone();
+    let prefix = cfg.prefix.clone();
+    let channel_ids = cfg.channel_ids.iter().map(|id| ChannelId::from(*id) ).collect();
 
-    let mut client = Client::new(token, handler) 
+    let mut client = Client::new(token, Handler { cfg }) 
     .expect("Error creating client");
     client.with_framework(StandardFramework::new()
-        .configure(|c| c.prefix(&prefix))
+        .configure(|c| c.prefix(&prefix).allowed_channels(channel_ids))
         .group(&GENERAL_GROUP));
+        
     client.start()
 }
 
