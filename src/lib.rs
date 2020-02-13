@@ -39,15 +39,14 @@ impl EventHandler for Handler {
     }
 }
 
-pub fn init(token: &String) -> Client {
+pub fn run(token: &String) -> Result<(), serenity::Error> {
     let mut client = Client::new(&token, Handler)
-        .expect("Error creating client");
+    .expect("Error creating client");
     client.with_framework(StandardFramework::new()
         .configure(|c| c.prefix("*"))
         .group(&GENERAL_GROUP));
-    client
+    client.start()
 }
-
 
 #[command]
 fn help(ctx: &mut Context, msg: &Message) -> CommandResult {
