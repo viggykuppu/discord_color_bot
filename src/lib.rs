@@ -1,4 +1,8 @@
+#[macro_use]
+extern crate lazy_static;
+
 mod color_parser;
+mod color_name_map;
 
 use std::error::Error;
 use serenity::client::Client;

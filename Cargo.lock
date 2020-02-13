@@ -195,6 +195,7 @@ name = "discord_name_color"
 version = "0.1.0"
 dependencies = [
  "hex",
+ "lazy_static",
  "serenity",
 ]
 

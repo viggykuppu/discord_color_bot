@@ -1,3 +1,4 @@
+use crate::color_name_map;
 use serenity::utils::Colour;
 use hex;
 
@@ -5,6 +6,9 @@ pub fn parse_color(msg: &str) -> Colour {
     match parse_color_arg(msg) {
         Some(color_arg) => {
             if let Some(color) = parse_hex_color(color_arg) {
+                return color;
+            }
+            if let Some(color) = parse_name_color(color_arg) {
                 return color;
             }
         },
@@ -36,3 +40,10 @@ fn parse_hex_color(color_arg: &str) -> Option<Colour> {
     None
 }
 
+fn parse_name_color(color_arg: &str) -> Option<Colour> {
+    let name_arg = &color_arg.to_lowercase();
+    match color_name_map::COLOR_NAME_MAP.get::<str>(name_arg) {
+        Some(color_hex) => return parse_hex_color(color_hex),
+        None => return None
+    }
+}
