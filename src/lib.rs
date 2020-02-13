@@ -13,9 +13,8 @@ use serenity::model::{
         RoleId,
         UserId
     },
-    guild::{
-        Role
-    }
+    gateway::{Ready, Activity },
+    guild::{ Role }
 };
 use serenity::prelude::{EventHandler, Context};
 use serenity::framework::standard::{
@@ -29,20 +28,39 @@ use serenity::framework::standard::{
 use serenity::utils::Colour;
 
 #[group]
-#[commands(color)]
+#[commands(color, help)]
 struct General;
 
 struct Handler;
 
-impl EventHandler for Handler {}
+impl EventHandler for Handler {
+    fn ready(&self, ctx: Context, _data_about_bot: Ready) {
+        ctx.set_activity(Activity::listening("*help"))
+    }
+}
 
 pub fn init(token: &String) -> Client {
     let mut client = Client::new(&token, Handler)
         .expect("Error creating client");
     client.with_framework(StandardFramework::new()
-        .configure(|c| c.prefix("!"))
+        .configure(|c| c.prefix("*"))
         .group(&GENERAL_GROUP));
     client
+}
+
+
+#[command]
+fn help(ctx: &mut Context, msg: &Message) -> CommandResult {
+    msg.author.dm(ctx, |m| {
+        m.content("Hi, I'm a bot that sets the color of your name!
+Please enter a command of the following format:
+    *color <color_value>
+Where color value is of the format #<hex_value>, <hex_value>, or <color_name>
+You can find the corresponding hex values for colors here: https://www.w3schools.com/colors/colors_picker.asp
+You can also find the list of supported color names here: https://www.w3schools.com/colors/colors_names.asp")
+    })?;
+    
+    Ok(())
 }
 
 #[command]

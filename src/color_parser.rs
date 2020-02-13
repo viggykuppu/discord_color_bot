@@ -32,7 +32,7 @@ fn parse_hex_color(color_arg: &str) -> Option<Colour> {
                 return Some(Colour::from_rgb(hex[0], hex[1], hex[2]));
             }
         },
-        Err(e) => { }
+        Err(_) => { }
     }
     None
 }
