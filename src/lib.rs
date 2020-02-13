@@ -47,34 +47,33 @@ pub fn init(token: &String) -> Client {
 
 #[command]
 fn color(ctx: &mut Context, msg: &Message) -> CommandResult {
-
-    match user_has_existing_color_role(ctx, msg) {
-        Some(role_id) => {
-            let colour = color_parser::parse_color(&msg.content);
-
-            if let Some(guild_id) = msg.guild_id {
-                if let Err(e) = edit_role(ctx, &guild_id, &role_id, colour) {
-                    eprintln!("Error creating role: {}",e);
+    if let Some(color) = color_parser::parse_color(&msg.content) {
+        match user_has_existing_color_role(ctx, msg) {
+            Some(role_id) => {
+                if let Some(guild_id) = msg.guild_id {
+                    if let Err(e) = edit_role(ctx, &guild_id, &role_id, color) {
+                        eprintln!("Error creating role: {}",e);
+                    }
                 }
-            }
-        },
-        None => {
-            let name = &msg.author.name;
-            let role_name = format!("{}'s color", name);
-            let colour = color_parser::parse_color(&msg.content);
-    
-            
-            if let Some(guild_id) = msg.guild_id {
-                match create_role(ctx, &guild_id, &role_name, colour) {
-                    Ok(role) => {
-                        if let Err(e) = attach_role(ctx, msg, &msg.author.id, &role.id) {
-                            eprintln!("Error attaching role: {}", e);
-                        }
-                    },
-                    Err(e) => eprintln!("Error creating role: {}", e)
+            },
+            None => {
+                let name = &msg.author.name;
+                let role_name = format!("{}'s color", name);
+
+                if let Some(guild_id) = msg.guild_id {
+                    match create_role(ctx, &guild_id, &role_name, color) {
+                        Ok(role) => {
+                            if let Err(e) = attach_role(ctx, msg, &msg.author.id, &role.id) {
+                                eprintln!("Error attaching role: {}", e);
+                            }
+                        },
+                        Err(e) => eprintln!("Error creating role: {}", e)
+                    }
                 }
             }
         }
+    } else {
+        eprintln!("Failed to parse color. Command: {}", msg.content);
     }
     
     Ok(())

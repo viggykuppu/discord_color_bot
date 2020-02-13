@@ -2,14 +2,14 @@ use crate::color_name_map;
 use serenity::utils::Colour;
 use hex;
 
-pub fn parse_color(msg: &str) -> Colour {   
+pub fn parse_color(msg: &str) -> Option<Colour> {   
     if let Some(color) = parse_hex_color_from_msg(msg) {
-        return color;
+        return Some(color);
     }
     if let Some(color) = parse_name_color_from_msg(msg) {
-        return color;
+        return Some(color);
     }
-    Colour::DARK_RED
+    None
 }
 
 fn parse_hex_color_from_msg(msg: &str) -> Option<Colour> {
@@ -32,7 +32,7 @@ fn parse_hex_color(color_arg: &str) -> Option<Colour> {
                 return Some(Colour::from_rgb(hex[0], hex[1], hex[2]));
             }
         },
-        Err(e) => { eprintln!("Error parsing supplied hex color: {}",e) }
+        Err(e) => { }
     }
     None
 }
