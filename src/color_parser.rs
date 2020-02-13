@@ -3,25 +3,22 @@ use serenity::utils::Colour;
 use hex;
 
 pub fn parse_color(msg: &str) -> Colour {   
-    match parse_color_arg(msg) {
-        Some(color_arg) => {
-            if let Some(color) = parse_hex_color(color_arg) {
-                return color;
-            }
-            if let Some(color) = parse_name_color(color_arg) {
-                return color;
-            }
-        },
-        None => eprintln!("Not enough arguments!")
+    if let Some(color) = parse_hex_color_from_msg(msg) {
+        return color;
+    }
+    if let Some(color) = parse_name_color_from_msg(msg) {
+        return color;
     }
     Colour::DARK_RED
 }
 
-fn parse_color_arg(msg: &str) -> Option<&str> {
+fn parse_hex_color_from_msg(msg: &str) -> Option<Colour> {
     let mut chunks = msg.split_whitespace();
-    // We know it's at least size 1 since this was invoked via the color command
     chunks.next();
-    return chunks.next();
+    if let Some(color_arg) = chunks.next() {
+        return parse_hex_color(color_arg);
+    }
+    None
 }
 
 fn parse_hex_color(color_arg: &str) -> Option<Colour> {
@@ -40,9 +37,18 @@ fn parse_hex_color(color_arg: &str) -> Option<Colour> {
     None
 }
 
+fn parse_name_color_from_msg(msg: &str) -> Option<Colour> {
+    let mut chunks = msg.split_whitespace();
+    chunks.next();
+    let color_arg = chunks.fold(String::new(), |mut acc, s| {
+        acc.push_str(&s.to_lowercase());
+        return acc;
+    });
+    return parse_name_color(&color_arg)
+}
+
 fn parse_name_color(color_arg: &str) -> Option<Colour> {
-    let name_arg = &color_arg.to_lowercase();
-    match color_name_map::COLOR_NAME_MAP.get::<str>(name_arg) {
+    match color_name_map::COLOR_NAME_MAP.get::<str>(color_arg) {
         Some(color_hex) => return parse_hex_color(color_hex),
         None => return None
     }
