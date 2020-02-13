@@ -67,26 +67,10 @@ fn color(ctx: &mut Context, msg: &Message) -> CommandResult {
     if let Some(color) = color_parser::parse_color(&msg.content) {
         match user_has_existing_color_role(ctx, msg) {
             Some(role_id) => {
-                if let Some(guild_id) = msg.guild_id {
-                    if let Err(e) = edit_role(ctx, &guild_id, &role_id, color) {
-                        eprintln!("Error creating role: {}",e);
-                    }
-                }
+                update_existing_role_color(ctx, msg, &role_id, color);
             },
             None => {
-                let name = &msg.author.name;
-                let role_name = format!("{}'s color", name);
-
-                if let Some(guild_id) = msg.guild_id {
-                    match create_role(ctx, &guild_id, &role_name, color) {
-                        Ok(role) => {
-                            if let Err(e) = attach_role(ctx, msg, &msg.author.id, &role.id) {
-                                eprintln!("Error attaching role: {}", e);
-                            }
-                        },
-                        Err(e) => eprintln!("Error creating role: {}", e)
-                    }
-                }
+                create_and_attach_color_role(ctx, msg, color);
             }
         }
     } else {
@@ -94,6 +78,30 @@ fn color(ctx: &mut Context, msg: &Message) -> CommandResult {
     }
     
     Ok(())
+}
+
+fn update_existing_role_color(ctx: &mut Context, msg: &Message, role_id: &RoleId, color: Colour) {
+    if let Some(guild_id) = &msg.guild_id {
+        if let Err(e) = edit_role(ctx, guild_id, role_id, color) {
+            eprintln!("Error creating role: {}",e);
+        }
+    }
+}
+
+fn create_and_attach_color_role(ctx: &mut Context, msg: &Message, color: Colour) {
+    let name = &msg.author.name;
+    let role_name = format!("{}'s color", name);
+
+    if let Some(guild_id) = &msg.guild_id {
+        match create_role(ctx, guild_id, &role_name, color) {
+            Ok(role) => {
+                if let Err(e) = attach_role(ctx, msg, &msg.author.id, &role.id) {
+                    eprintln!("Error attaching role: {}", e);
+                }
+            },
+            Err(e) => eprintln!("Error creating role: {}", e)
+        }
+    }
 }
 
 fn user_has_existing_color_role(ctx: &mut Context, msg: &Message) -> Option<RoleId> {
@@ -111,7 +119,14 @@ fn user_has_existing_color_role(ctx: &mut Context, msg: &Message) -> Option<Role
             }
         }
     }
+    
     None
+}
+
+fn edit_role(ctx: &mut Context, guild: &GuildId, role_id: &RoleId, colour: Colour) -> Result<(),Box<dyn Error>> {
+    guild.edit_role(ctx, role_id, |r| r.colour(colour.0 as u64))?;
+
+    Ok(())
 }
 
 fn create_role(ctx: &mut Context, guild: &GuildId, name: &str, colour: Colour) -> Result<Role,Box<dyn Error>> {
@@ -127,11 +142,5 @@ fn attach_role(ctx: &mut Context, msg: &Message, user_id: &UserId, role_id: &Rol
             member_to_attach_role.add_role(ctx, role_id)?;
         }
     }
-    Ok(())
-}
-
-fn edit_role(ctx: &mut Context, guild: &GuildId, role_id: &RoleId, colour: Colour) -> Result<(),Box<dyn Error>> {
-    guild.edit_role(ctx, role_id, |r| r.colour(colour.0 as u64))?;
-
     Ok(())
 }
