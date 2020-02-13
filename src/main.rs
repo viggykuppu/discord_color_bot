@@ -7,7 +7,7 @@ fn main() {
     match bot_config::get_config() {
         Ok(config) => {            
             // start listening for events by starting a single shard
-            if let Err(why) = discord_name_color::run(&config) {
+            if let Err(why) = discord_name_color::run(config) {
                 eprintln!("An error occurred while starting the client: {:?}", why);
                 process::exit(1)
             }

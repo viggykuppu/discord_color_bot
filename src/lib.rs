@@ -33,7 +33,9 @@ use serenity::utils::Colour;
 #[commands(color, help)]
 struct General;
 
-struct Handler;
+struct Handler {
+    pub cfg: BotConfig
+}
 
 impl EventHandler for Handler {
     fn ready(&self, ctx: Context, _data_about_bot: Ready) {
@@ -41,14 +43,15 @@ impl EventHandler for Handler {
     }
 }
 
-pub fn run(cfg: &BotConfig) -> Result<(), serenity::Error> {
-    let token = &cfg.token;
-    let prefix = &cfg.prefix;
+pub fn run(cfg: BotConfig) -> Result<(), serenity::Error> {
+    let handler = Handler { cfg };
+    let token = handler.cfg.token.clone();
+    let prefix = handler.cfg.prefix.clone();
 
-    let mut client = Client::new(token, Handler)
+    let mut client = Client::new(token, handler) 
     .expect("Error creating client");
     client.with_framework(StandardFramework::new()
-        .configure(|c| c.prefix(prefix))
+        .configure(|c| c.prefix(&prefix))
         .group(&GENERAL_GROUP));
     client.start()
 }
@@ -136,6 +139,7 @@ fn edit_role(ctx: &mut Context, guild: &GuildId, role_id: &RoleId, colour: Colou
 
 fn create_role(ctx: &mut Context, guild: &GuildId, name: &str, colour: Colour) -> Result<Role,Box<dyn Error>> {
     let role = guild.create_role(ctx, |r| r.hoist(true).name(name).colour(colour.0 as u64))?;
+
     Ok(role)
 }
 
@@ -147,5 +151,6 @@ fn attach_role(ctx: &mut Context, msg: &Message, user_id: &UserId, role_id: &Rol
             member_to_attach_role.add_role(ctx, role_id)?;
         }
     }
+
     Ok(())
 }
