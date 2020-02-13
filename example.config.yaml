@@ -1,0 +1,4 @@
+# This is an example YAML file that outlines the possible config values
+# Copy this to config.yaml to actually use it
+prefix: "*"
+token: <token goes here>
