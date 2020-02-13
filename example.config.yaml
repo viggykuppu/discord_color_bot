@@ -1,4 +1,7 @@
 # This is an example YAML file that outlines the possible config values
 # Copy this to config.yaml to actually use it
+
+# Default prefix is ! if none is supplied
 prefix: "*"
+# Required value
 token: <token goes here>

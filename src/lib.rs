@@ -3,7 +3,9 @@ extern crate lazy_static;
 
 mod color_parser;
 mod color_name_map;
+pub mod bot_config;
 
+use bot_config::BotConfig;
 use std::error::Error;
 use serenity::client::Client;
 use serenity::model::{
@@ -39,11 +41,14 @@ impl EventHandler for Handler {
     }
 }
 
-pub fn run(token: &String) -> Result<(), serenity::Error> {
-    let mut client = Client::new(&token, Handler)
+pub fn run(cfg: &BotConfig) -> Result<(), serenity::Error> {
+    let token = &cfg.token;
+    let prefix = &cfg.prefix;
+
+    let mut client = Client::new(token, Handler)
     .expect("Error creating client");
     client.with_framework(StandardFramework::new()
-        .configure(|c| c.prefix("*"))
+        .configure(|c| c.prefix(prefix))
         .group(&GENERAL_GROUP));
     client.start()
 }
@@ -119,7 +124,7 @@ fn user_has_existing_color_role(ctx: &mut Context, msg: &Message) -> Option<Role
             }
         }
     }
-    
+
     None
 }
 
