@@ -25,3 +25,9 @@ pub fn get_config() -> Result<BotConfig, ConfigError> {
 
     Ok(cfg)
 }
+
+lazy_static! {
+    pub static ref CONFIG: BotConfig = {
+        get_config().expect("Failed to load config!")
+    };
+}

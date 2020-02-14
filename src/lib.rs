@@ -5,7 +5,6 @@ mod color_parser;
 mod color_name_map;
 pub mod bot_config;
 
-use bot_config::BotConfig;
 use std::error::Error;
 use serenity::client::Client;
 use serenity::model::{
@@ -35,22 +34,20 @@ use serenity::utils::Colour;
 #[commands(color, help)]
 struct General;
 
-struct Handler {
-    pub cfg: BotConfig
-}
+struct Handler;
 
 impl EventHandler for Handler {
     fn ready(&self, ctx: Context, _data_about_bot: Ready) {
-        ctx.set_activity(Activity::listening(&format!("{}help", &self.cfg.prefix)))
+        ctx.set_activity(Activity::listening(&format!("{}help", &bot_config::CONFIG.prefix)))
     }
 }
 
-pub fn run(cfg: BotConfig) -> Result<(), serenity::Error> {
-    let token = cfg.token.clone();
-    let prefix = cfg.prefix.clone();
-    let channel_ids = cfg.channel_ids.iter().map(|id| ChannelId::from(*id) ).collect();
+pub fn run() -> Result<(), serenity::Error> {
+    let token = bot_config::CONFIG.token.clone();
+    let prefix = bot_config::CONFIG.prefix.clone();
+    let channel_ids = bot_config::CONFIG.channel_ids.iter().map(|id| ChannelId::from(*id) ).collect();
 
-    let mut client = Client::new(token, Handler { cfg }) 
+    let mut client = Client::new(token, Handler) 
     .expect("Error creating client");
     client.with_framework(StandardFramework::new()
         .configure(|c| c.prefix(&prefix).allowed_channels(channel_ids))
@@ -62,12 +59,12 @@ pub fn run(cfg: BotConfig) -> Result<(), serenity::Error> {
 #[command]
 fn help(ctx: &mut Context, msg: &Message) -> CommandResult {
     msg.author.dm(ctx, |m| {
-        m.content("Hi, I'm a bot that sets the color of your name!
+        m.content(format!("Hi, I'm a bot that sets the color of your name!
 Please enter a command of the following format:
-    *color <color_value>
+    {}color <color_value>
 Where color value is of the format #<hex_value>, <hex_value>, or <color_name>
 You can find the corresponding hex values for colors here: https://www.w3schools.com/colors/colors_picker.asp
-You can also find the list of supported color names here: https://www.w3schools.com/colors/colors_names.asp")
+You can also find the list of supported color names here: https://www.w3schools.com/colors/colors_names.asp", bot_config::CONFIG.prefix))
     })?;
 
     Ok(())
@@ -94,7 +91,7 @@ fn color(ctx: &mut Context, msg: &Message) -> CommandResult {
         Err(e) => {
             eprintln!("Command: {}; Error: {}", msg.content, e);
             match e {
-                color_parser::ColorParseError::InvalidColor => msg.reply(ctx,"I didn't understand the color you provided. Use the !help command for info on what kind of colors I can accept.")?,
+                color_parser::ColorParseError::InvalidColor => msg.reply(ctx,format!("I didn't understand the color you provided. Use the {}help command for info on what kind of colors I can accept.", bot_config::CONFIG.prefix))?,
                 color_parser::ColorParseError::InvalidGrey => msg.reply(ctx, "I'm sorry, but I'm not allowed to use that color")?
             };
             return Err(CommandError::from("failed to set color"));
