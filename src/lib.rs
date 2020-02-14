@@ -74,17 +74,20 @@ You can also find the list of supported color names here: https://www.w3schools.
 
 #[command]
 fn color(ctx: &mut Context, msg: &Message) -> CommandResult {
-    if let Some(color) = color_parser::parse_color(&msg.content) {
-        match user_has_existing_color_role(ctx, msg) {
-            Some(role_id) => {
-                update_existing_role_color(ctx, msg, &role_id, color);
-            },
-            None => {
-                create_and_attach_color_role(ctx, msg, color);
+    match color_parser::parse_color(&msg.content) {
+        Ok(color) => {
+            match user_has_existing_color_role(ctx, msg) {
+                Some(role_id) => {
+                    update_existing_role_color(ctx, msg, &role_id, color);
+                },
+                None => {
+                    create_and_attach_color_role(ctx, msg, color);
+                }
             }
+        },
+        Err(e) => {
+            eprintln!("Command: {}; Error: {}", msg.content, e);
         }
-    } else {
-        eprintln!("Failed to parse color. Command: {}", msg.content);
     }
     
     Ok(())

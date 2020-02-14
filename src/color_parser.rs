@@ -1,18 +1,24 @@
 use crate::color_name_map;
 use serenity::utils::Colour;
+use std::error;
 use hex;
+use std::fmt;
 
-pub fn parse_color(msg: &str) -> Option<Colour> {   
+pub fn parse_color(msg: &str) -> Result<Colour, ColorParseError> {   
     if let Some(color) = parse_hex_color_from_msg(msg) {
         if is_valid_grey(&color){
-            return Some(color);
+            return Ok(color);
+        } else {
+            return Err(ColorParseError::InvalidGrey);
         }
     } else if let Some(color) = parse_name_color_from_msg(msg) {
         if is_valid_grey(&color) {
-            return Some(color);
+            return Ok(color);
+        } else {
+            return Err(ColorParseError::InvalidGrey);
         }
     }
-    None
+    Err(ColorParseError::InvalidColor)
 }
 
 // Certain shades of grey cause user's names to blend in with the background and be invisible in Discord
@@ -27,7 +33,6 @@ fn is_valid_grey(color: &Colour) -> bool {
 
     // Checks for "greyish" colors
     if (r_i32 - g_i32).abs() <= 10 && (r_i32 - b_i32).abs() <= 10 && (g_i32 - b_i32).abs() <= 10 {
-        println!("Greyish!, r: {}, g: {}, b: {}", r, g, b);
         let lower_bound = r >= 26 && g >= 26 && b >= 26;
         let upper_bound = r <= 115 && g <= 115 && b <= 115;
 
@@ -77,3 +82,20 @@ fn parse_name_color(color_arg: &str) -> Option<Colour> {
         None => return None
     }
 }
+
+#[derive(Debug)]
+pub enum ColorParseError {
+    InvalidColor,
+    InvalidGrey
+}
+
+impl fmt::Display for ColorParseError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ColorParseError::InvalidColor => write!(f, "Invalid argument"),
+            ColorParseError::InvalidGrey => write!(f, "Invalid shade of grey")
+        }
+    }
+}
+
+impl error::Error for ColorParseError { }
