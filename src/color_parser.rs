@@ -4,12 +4,36 @@ use hex;
 
 pub fn parse_color(msg: &str) -> Option<Colour> {   
     if let Some(color) = parse_hex_color_from_msg(msg) {
-        return Some(color);
-    }
-    if let Some(color) = parse_name_color_from_msg(msg) {
-        return Some(color);
+        if is_valid_grey(&color){
+            return Some(color);
+        }
+    } else if let Some(color) = parse_name_color_from_msg(msg) {
+        if is_valid_grey(&color) {
+            return Some(color);
+        }
     }
     None
+}
+
+// Certain shades of grey cause user's names to blend in with the background and be invisible in Discord
+// This checks for colors in that range and prevents the user from setting their name color to it
+// The exact color of discord's bg is #36393f
+// We want to block all shades of grey from #1a1a1a - #737373
+fn is_valid_grey(color: &Colour) -> bool {
+    let (r,g,b) = color.tuple();
+    let r_i32 = r as i32; 
+    let g_i32 = g as i32;
+    let b_i32 = b as i32;
+
+    // Checks for "greyish" colors
+    if (r_i32 - g_i32).abs() <= 10 && (r_i32 - b_i32).abs() <= 10 && (g_i32 - b_i32).abs() <= 10 {
+        println!("Greyish!, r: {}, g: {}, b: {}", r, g, b);
+        let lower_bound = r >= 26 && g >= 26 && b >= 26;
+        let upper_bound = r <= 115 && g <= 115 && b <= 115;
+
+        return !(upper_bound && lower_bound);
+    }
+    return true;
 }
 
 fn parse_hex_color_from_msg(msg: &str) -> Option<Colour> {
