@@ -94,7 +94,7 @@ fn color(ctx: &mut Context, msg: &Message) -> CommandResult {
         Err(e) => {
             eprintln!("Command: {}; Error: {}", msg.content, e);
             match e {
-                color_parser::ColorParseError::InvalidColor => msg.reply(ctx,"I didn't understand the color you provided. Use the help command for info on what kind of colors I can accept.")?,
+                color_parser::ColorParseError::InvalidColor => msg.reply(ctx,"I didn't understand the color you provided. Use the !help command for info on what kind of colors I can accept.")?,
                 color_parser::ColorParseError::InvalidGrey => msg.reply(ctx, "I'm sorry, but I'm not allowed to use that color")?
             };
             return Err(CommandError::from("failed to set color"));
