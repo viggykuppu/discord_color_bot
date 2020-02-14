@@ -69,7 +69,7 @@ Where color value is of the format #<hex_value>, <hex_value>, or <color_name>
 You can find the corresponding hex values for colors here: https://www.w3schools.com/colors/colors_picker.asp
 You can also find the list of supported color names here: https://www.w3schools.com/colors/colors_names.asp")
     })?;
-    
+
     Ok(())
 }
 
@@ -79,10 +79,14 @@ fn color(ctx: &mut Context, msg: &Message) -> CommandResult {
         Ok(color) => {
             match user_has_existing_color_role(ctx, msg) {
                 Some(role_id) => {
-                    update_existing_role_color(ctx, msg, &role_id, color)?;
+                    if let Err(e) = update_existing_role_color(ctx, msg, &role_id, color) {
+                        eprintln!("Update existing role failed: {}", e);
+                    }
                 },
                 None => {
-                    create_and_attach_color_role(ctx, msg, color)?;
+                    if let Err(e) = create_and_attach_color_role(ctx, msg, color) {
+                        eprintln!("Create and attach new role failed: {}", e);
+                    }
                 }
             }
         },
@@ -146,7 +150,7 @@ fn edit_role(ctx: &mut Context, guild: &GuildId, role_id: &RoleId, colour: Colou
 }
 
 fn create_role(ctx: &mut Context, guild: &GuildId, name: &str, colour: Colour) -> Result<Role,Box<dyn Error>> {
-    let role = guild.create_role(ctx, |r| r.hoist(true).name(name).colour(colour.0 as u64))?;
+    let role = guild.create_role(ctx, |r| r.name(name).colour(colour.0 as u64))?;
 
     Ok(role)
 }
