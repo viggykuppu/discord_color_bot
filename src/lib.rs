@@ -22,6 +22,7 @@ use serenity::model::{
 use serenity::prelude::{EventHandler, Context};
 use serenity::framework::standard::{
     CommandResult,
+    CommandError,
     StandardFramework,
     macros::{
         command,
@@ -78,43 +79,45 @@ fn color(ctx: &mut Context, msg: &Message) -> CommandResult {
         Ok(color) => {
             match user_has_existing_color_role(ctx, msg) {
                 Some(role_id) => {
-                    update_existing_role_color(ctx, msg, &role_id, color);
+                    update_existing_role_color(ctx, msg, &role_id, color)?;
                 },
                 None => {
-                    create_and_attach_color_role(ctx, msg, color);
+                    create_and_attach_color_role(ctx, msg, color)?;
                 }
             }
         },
         Err(e) => {
             eprintln!("Command: {}; Error: {}", msg.content, e);
+            match e {
+                color_parser::ColorParseError::InvalidColor => msg.reply(ctx,"I didn't understand the color you provided. Use the help command for info on what kind of colors I can accept.")?,
+                color_parser::ColorParseError::InvalidGrey => msg.reply(ctx, "I'm sorry, but I'm not allowed to use that color")?
+            };
+            return Err(CommandError::from("failed to set color"));
         }
     }
     
+    msg.reply(ctx, "Done!")?;
+
     Ok(())
 }
 
-fn update_existing_role_color(ctx: &mut Context, msg: &Message, role_id: &RoleId, color: Colour) {
+fn update_existing_role_color(ctx: &mut Context, msg: &Message, role_id: &RoleId, color: Colour) -> Result<(),Box<dyn Error>> {
     if let Some(guild_id) = &msg.guild_id {
-        if let Err(e) = edit_role(ctx, guild_id, role_id, color) {
-            eprintln!("Error creating role: {}",e);
-        }
+        edit_role(ctx, guild_id, role_id, color)?;
     }
+    Ok(())
 }
 
-fn create_and_attach_color_role(ctx: &mut Context, msg: &Message, color: Colour) {
+fn create_and_attach_color_role(ctx: &mut Context, msg: &Message, color: Colour) -> Result<(),Box<dyn Error>> {
     let name = &msg.author.name;
     let role_name = format!("{}'s color", name);
 
     if let Some(guild_id) = &msg.guild_id {
-        match create_role(ctx, guild_id, &role_name, color) {
-            Ok(role) => {
-                if let Err(e) = attach_role(ctx, msg, &msg.author.id, &role.id) {
-                    eprintln!("Error attaching role: {}", e);
-                }
-            },
-            Err(e) => eprintln!("Error creating role: {}", e)
-        }
+        let role = create_role(ctx, guild_id, &role_name, color)?;
+        attach_role(ctx, msg, &msg.author.id, &role.id)?;
     }
+
+    Ok(())
 }
 
 fn user_has_existing_color_role(ctx: &mut Context, msg: &Message) -> Option<RoleId> {
