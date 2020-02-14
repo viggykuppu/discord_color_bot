@@ -74,6 +74,7 @@ You can also find the list of supported color names here: https://www.w3schools.
 }
 
 #[command]
+#[aliases(colour)]
 fn color(ctx: &mut Context, msg: &Message) -> CommandResult {
     match color_parser::parse_color(&msg.content) {
         Ok(color) => {
