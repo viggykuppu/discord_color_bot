@@ -32,7 +32,8 @@ fn is_valid_grey(color: &Colour) -> bool {
     let b_i32 = b as i32;
 
     // Checks for "greyish" colors
-    if (r_i32 - g_i32).abs() <= 10 && (r_i32 - b_i32).abs() <= 10 && (g_i32 - b_i32).abs() <= 10 {
+    let min_diff = 32;
+    if (r_i32 - g_i32).abs() <= min_diff && (r_i32 - b_i32).abs() <= min_diff && (g_i32 - b_i32).abs() <= min_diff {
         let lower_bound = r >= 26 && g >= 26 && b >= 26;
         let upper_bound = r <= 115 && g <= 115 && b <= 115;
 
