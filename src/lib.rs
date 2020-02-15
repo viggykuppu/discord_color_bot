@@ -29,6 +29,7 @@ use serenity::framework::standard::{
     }
 };
 use serenity::utils::Colour;
+use log::error;
 
 #[group]
 #[commands(color, help)]
@@ -78,18 +79,18 @@ fn color(ctx: &mut Context, msg: &Message) -> CommandResult {
             match user_has_existing_color_role(ctx, msg) {
                 Some(role_id) => {
                     if let Err(e) = update_existing_role_color(ctx, msg, &role_id, color) {
-                        eprintln!("Update existing role failed: {}", e);
+                        error!("Update existing role failed: {}", e);
                     }
                 },
                 None => {
                     if let Err(e) = create_and_attach_color_role(ctx, msg, color) {
-                        eprintln!("Create and attach new role failed: {}", e);
+                        error!("Create and attach new role failed: {}", e);
                     }
                 }
             }
         },
         Err(e) => {
-            eprintln!("Command: {}; Error: {}", msg.content, e);
+            error!("Command: {}; Error: {}", msg.content, e);
             match e {
                 color_parser::ColorParseError::InvalidColor => msg.reply(ctx,format!("I didn't understand the color you provided. Use the {}help command for info on what kind of colors I can accept.", bot_config::CONFIG.prefix))?,
                 color_parser::ColorParseError::InvalidGrey => msg.reply(ctx, "I'm sorry, but I'm not allowed to use that color")?
