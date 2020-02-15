@@ -1,24 +1,26 @@
 use crate::color_name_map;
 use serenity::utils::Colour;
 use std::error;
-use hex;
 use std::fmt;
 
 pub fn parse_color(msg: &str) -> Result<Colour, ColorParseError> {   
-    if let Some(color) = parse_hex_color_from_msg(msg) {
-        if is_valid_grey(&color){
-            return Ok(color);
-        } else {
-            return Err(ColorParseError::InvalidGrey);
-        }
-    } else if let Some(color) = parse_name_color_from_msg(msg) {
-        if is_valid_grey(&color) {
-            return Ok(color);
-        } else {
-            return Err(ColorParseError::InvalidGrey);
-        }
+    let color_arg = get_color_arg(msg);
+    if let Some(color) = parse_hex_color(&color_arg) {
+        return validate_color(color);
+    } else if let Some(color) = parse_name_color(&color_arg) {
+        return validate_color(color);
+    } else if let Some(color) = parse_decimal_color(&color_arg) {
+        return validate_color(color);   
     }
     Err(ColorParseError::InvalidColor)
+}
+
+fn validate_color(color: Colour) -> Result<Colour, ColorParseError> {
+    if is_valid_grey(&color) {
+        return Ok(color);
+    } else {
+        return Err(ColorParseError::InvalidGrey);
+    }
 }
 
 // Certain shades of grey cause user's names to blend in with the background and be invisible in Discord
@@ -42,39 +44,15 @@ fn is_valid_grey(color: &Colour) -> bool {
     return true;
 }
 
-fn parse_hex_color_from_msg(msg: &str) -> Option<Colour> {
-    let mut chunks = msg.split_whitespace();
-    chunks.next();
-    if let Some(color_arg) = chunks.next() {
-        return parse_hex_color(color_arg);
-    }
-    None
-}
-
 fn parse_hex_color(color_arg: &str) -> Option<Colour> {
     let mut hex_arg = color_arg;
     if color_arg.starts_with("#") {
         hex_arg = &color_arg[1..];
     }
-    match hex::decode(hex_arg) {
-        Ok(hex) => {
-            if hex.len() == 3 {
-                return Some(Colour::from_rgb(hex[0], hex[1], hex[2]));
-            }
-        },
-        Err(_) => { }
+    match u32::from_str_radix(hex_arg, 16) {
+        Ok(d) => Some(Colour::from(d)),
+        Err(_) => None
     }
-    None
-}
-
-fn parse_name_color_from_msg(msg: &str) -> Option<Colour> {
-    let mut chunks = msg.split_whitespace();
-    chunks.next();
-    let color_arg = chunks.fold(String::new(), |mut acc, s| {
-        acc.push_str(&s.to_lowercase());
-        return acc;
-    });
-    return parse_name_color(&color_arg)
 }
 
 fn parse_name_color(color_arg: &str) -> Option<Colour> {
@@ -83,6 +61,23 @@ fn parse_name_color(color_arg: &str) -> Option<Colour> {
         None => return None
     }
 }
+
+fn parse_decimal_color(color_arg: &str) -> Option<Colour> {
+    match u32::from_str_radix(color_arg, 10) {
+        Ok(d) => Some(Colour::from(d)),
+        Err(_) => None
+    }
+}
+
+fn get_color_arg(msg: &str) -> String {
+    let mut chunks = msg.split_whitespace();
+    chunks.next();
+    chunks.fold(String::new(), |mut acc, s| {
+        acc.push_str(&s.to_lowercase());
+        return acc;
+    })
+}
+
 
 #[derive(Debug)]
 pub enum ColorParseError {
