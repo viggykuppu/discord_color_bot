@@ -63,7 +63,7 @@ fn help(ctx: &mut Context, msg: &Message) -> CommandResult {
         m.content(format!("Hi, I'm a bot that sets the color of your name!
 Please enter a command of the following format:
     {}color <color_value>
-Where color value is of the format #<hex_value>, <hex_value>, or <color_name>
+Where color value is of the format #<hex_value>, <hex_value>, <decimal_value>, or <color_name>
 You can find the corresponding hex values for colors here: https://www.w3schools.com/colors/colors_picker.asp
 You can also find the list of supported color names here: https://www.w3schools.com/colors/colors_names.asp", bot_config::CONFIG.prefix))
     })?;
