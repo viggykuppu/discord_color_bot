@@ -39,26 +39,30 @@ struct Handler;
 
 impl EventHandler for Handler {
     fn ready(&self, ctx: Context, _data_about_bot: Ready) {
-        ctx.set_activity(Activity::listening(&format!("{}help", &bot_config::CONFIG.prefix)))
+        ctx.set_activity(Activity::listening(&format!("{}help", &bot_config::CONFIG.prefix)));
     }
 }
 
-pub fn run() -> Result<(), serenity::Error> {
+pub async fn run() -> Result<(), serenity::Error> {
     let token = bot_config::CONFIG.token.clone();
     let prefix = bot_config::CONFIG.prefix.clone();
     let channel_ids = bot_config::CONFIG.channel_ids.iter().map(|id| ChannelId::from(*id) ).collect();
 
-    let mut client = Client::new(token, Handler) 
-    .expect("Error creating client");
-    client.with_framework(StandardFramework::new()
+    let mut client = Client::builder(token)
+    .event_handler(Handler)
+    .framework(StandardFramework::new()
         .configure(|c| c.prefix(&prefix).allowed_channels(channel_ids))
-        .group(&GENERAL_GROUP));
+        .group(&GENERAL_GROUP))
+        .await
+        .expect("Error creating client");
         
-    client.start()
+    if let Err(why) = client.start().await {
+        println!("An error occurred while running the client: {:?}", why);
+    }
 }
 
 #[command]
-fn help(ctx: &mut Context, msg: &Message) -> CommandResult {
+async fn help(ctx: &mut Context, msg: &Message) -> CommandResult {
     msg.author.dm(ctx, |m| {
         m.content(format!("Hi, I'm a bot that sets the color of your name!
 Please enter a command of the following format:
@@ -73,7 +77,7 @@ You can also find the list of supported color names here: https://www.w3schools.
 
 #[command]
 #[aliases(colour)]
-fn color(ctx: &mut Context, msg: &Message) -> CommandResult {
+async fn color(ctx: &mut Context, msg: &Message) -> CommandResult {
     match color_parser::parse_color(&msg.content) {
         Ok(color) => {
             match user_has_existing_color_role(ctx, msg) {
@@ -156,12 +160,28 @@ fn create_role(ctx: &mut Context, guild: &GuildId, name: &str, colour: Colour) -
 
 fn attach_role(ctx: &mut Context, msg: &Message, user_id: &UserId, role_id: &RoleId) -> Result<(),Box<dyn Error>> {
     if let Some(_guild) = msg.guild(&ctx) {
-        let mut guild = _guild.write();
-        let guild_members = &mut guild.members;
-        if let Some(member_to_attach_role) = guild_members.get_mut(user_id) {
-            member_to_attach_role.add_role(ctx, role_id)?;
+        let guild = _guild.write();
+        println!("got guild");
+        match guild.member(&ctx, user_id) {
+            Ok(member) => println!("got member, {:?}", member),
+            Err(e) => eprintln!("got error, {:?}", e)
         }
+        // println!("got member");
+        // member.add_role(&ctx, role_id)?;
     }
-
     Ok(())
 }
+
+// fn attach_role(ctx: &mut Context, msg: &Message, user_id: &UserId, role_id: &RoleId) -> Result<(),Box<dyn Error>> {
+//     if let Some(_guild) = msg.guild(&ctx) {
+//         let mut guild = _guild.write();
+//         let _guild_members = &mut guild.members(&ctx, Some(10), None);
+//         let guild_members = &mut guild.members;
+//         if let Some(member_to_attach_role) = guild_members.get_mut(user_id) {
+//             member_to_attach_role.add_role(&ctx, role_id)?;
+//         } else  if let Some(member_to_attach_role) = guild_members.get_mut(user_id) {
+//             member_to_attach_role.add_role(&ctx, role_id)?;
+//         }
+//     }
+//     Ok(())
+// }
