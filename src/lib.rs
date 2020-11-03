@@ -156,9 +156,9 @@ fn create_role(ctx: &mut Context, guild: &GuildId, name: &str, colour: Colour) -
 
 fn attach_role(ctx: &mut Context, msg: &Message, user_id: &UserId, role_id: &RoleId) -> Result<(),Box<dyn Error>> {
     if let Some(_guild) = msg.guild(&ctx) {
-        let mut guild = _guild.write();
-        let guild_members = &mut guild.members;
-        if let Some(member_to_attach_role) = guild_members.get_mut(user_id) {
+        let guild = _guild.write();
+        let guild_members = &mut guild.members(&ctx, Some(100), None)?;
+        if let Some(member_to_attach_role) = guild_members.into_iter().find(|x| x.user.read().id.as_u64() == user_id.as_u64()) {
             member_to_attach_role.add_role(ctx, role_id)?;
         }
     }
