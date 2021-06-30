@@ -24,7 +24,11 @@ use serenity::{
     },
     model::{
         interactions::{
-            Interaction, InteractionResponseType
+            Interaction, 
+            InteractionData,
+            ApplicationCommandInteractionData,
+            InteractionResponseType,
+            InteractionType
         },
         channel::Message,
         gateway::{Ready, Activity },
@@ -34,14 +38,15 @@ use serenity::{
             GuildId,
             RoleId,
             UserId
-        }
+        },
+        user::User
     },
     prelude::{EventHandler, Context},
     utils::Colour
 };
 
 #[group]
-#[commands(color, help)]
+#[commands(color)]
 struct General;
 
 struct Handler;
@@ -53,14 +58,33 @@ impl EventHandler for Handler {
     }
 
     async fn interaction_create(&self, ctx: Context, interaction: Interaction)  {
-        println!("{:#?}",interaction);
-        interaction
-            .create_interaction_response(&ctx.http, |response| {
-                response
-                    .kind(InteractionResponseType::ChannelMessageWithSource)
-                    .interaction_response_data(|message| message.content("Received event!"))
-            })
-            .await;
+        // println!("{:?}",interaction);
+        match interaction.kind {
+            InteractionType::Ping => { 
+                if let Err(e) = interaction.create_interaction_response(&ctx.http, |response| {
+                    response.kind(InteractionResponseType::Pong)
+                })
+                .await {
+                    error!("Error ponging {}", e);
+                };
+            },
+            InteractionType::ApplicationCommand => {
+                if let Some(InteractionData::ApplicationCommand(command)) = &interaction.data {
+                    handle_command(&ctx, &interaction, command).await;
+                }
+            }
+            _ => ()
+        }
+    }
+}
+
+async fn handle_command(ctx: &Context, interaction: &Interaction, command: &ApplicationCommandInteractionData) {
+    let result = match command.name.as_str() { 
+        "help" => handle_help(ctx, interaction).await,
+        _ => Ok(())
+    };
+    if let Err(e) = result {
+        error!("handling interaction failed {}", e);
     }
 }
 
@@ -82,15 +106,46 @@ pub async fn run() -> Result<(), serenity::Error> {
     client.start().await
 }
 
-#[command]
-async fn help(ctx: &Context, msg: &Message) -> CommandResult {
-    msg.author.dm(ctx, |m| {
-        m.content(format!("Hi, I'm a bot that sets the color of your name!
-Please enter a command of the following format:
-    {}color <color_value>
+// #[command]
+// async fn help(ctx: &Context, msg: &Message) -> CommandResult {
+//     msg.author.dm(ctx, |m| {
+//         m.content(format!("Hi, I'm a bot that sets the color of your name!
+// Please enter a command of the following format:
+//     {}color <color_value>
+// Where color value is of the format #<hex_value>, <hex_value>, <decimal_value>, or <color_name>
+// You can find the corresponding hex values for colors here: https://www.w3schools.com/colors/colors_picker.asp
+// You can also find the list of supported color names here: https://www.w3schools.com/colors/colors_names.asp", bot_config::CONFIG.prefix))
+//     }).await?;
+
+//     Ok(())
+// }
+
+async fn handle_help(ctx: &Context, interaction: &Interaction) -> Result<(),Box<dyn Error>> {
+    let mut user: Option<&User> = None;
+    if let Some(member) = &interaction.member {
+        user = Some(&member.user);
+        
+    } else if let Some(u) = &interaction.user {
+        user = Some(&u);
+    };
+    if let Some(u) = user {
+        help(ctx, u).await?;
+        interaction.create_interaction_response(&ctx.http, |response| {
+            response
+                .kind(InteractionResponseType::ChannelMessageWithSource)
+                .interaction_response_data(|message| message.content("Check your DMs 🙃"))
+        }).await?;
+    }
+    Ok(())
+}
+
+async fn help(ctx: &Context, author: &User) -> Result<(),Box<dyn Error>> {
+    author.dm(ctx, |m| {
+        m.content(format!("Hi, I'm a bot that lets your set your name's color.
+Use /setcolor <color_value> to accomplish this
 Where color value is of the format #<hex_value>, <hex_value>, <decimal_value>, or <color_name>
 You can find the corresponding hex values for colors here: https://www.w3schools.com/colors/colors_picker.asp
-You can also find the list of supported color names here: https://www.w3schools.com/colors/colors_names.asp", bot_config::CONFIG.prefix))
+You can also find the list of supported color names here: https://www.w3schools.com/colors/colors_names.asp", ))
     }).await?;
 
     Ok(())
