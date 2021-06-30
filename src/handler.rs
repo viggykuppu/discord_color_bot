@@ -75,3 +75,22 @@ async fn handle_help(ctx: &Context, interaction: &Interaction) -> Result<(),Box<
     }
     Ok(())
 }
+
+async fn handle_color(ctx: &Context, interaction: &Interaction) -> Result<(),Box<dyn Error>> {
+    let mut user: Option<&User> = None;
+    if let Some(member) = &interaction.member {
+        user = Some(&member.user);
+        
+    } else if let Some(u) = &interaction.user {
+        user = Some(&u);
+    };
+    if let Some(u) = user {
+        discord_commands::help(ctx, u).await?;
+        interaction.create_interaction_response(&ctx.http, |response| {
+            response
+                .kind(InteractionResponseType::ChannelMessageWithSource)
+                .interaction_response_data(|message| message.content("Check your DMs 🙃"))
+        }).await?;
+    }
+    Ok(())
+}
