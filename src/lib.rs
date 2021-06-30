@@ -53,6 +53,7 @@ impl EventHandler for Handler {
     }
 
     async fn interaction_create(&self, ctx: Context, interaction: Interaction)  {
+        println!("{:#?}",interaction);
         interaction
             .create_interaction_response(&ctx.http, |response| {
                 response

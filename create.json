@@ -1,4 +1,10 @@
 {
-    "name": "color",
-    "description": "Set your name's color"
+    "name": "setcolor",
+    "description": "Set your name's color",
+    "options": [{
+        "name": "color",
+        "description": "Use a hex color or color name",
+        "type": 3,
+        "required": true
+    }]
 }
