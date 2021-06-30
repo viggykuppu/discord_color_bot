@@ -5,7 +5,8 @@ pub struct BotConfig {
     pub prefix: String,
     pub token: String,
     pub channel_ids: Vec<u64>,
-    pub logfile: String
+    pub logfile: String,
+    pub application_id: u64,
 }
 
 pub fn get_config() -> Result<BotConfig, ConfigError> {
@@ -23,8 +24,9 @@ pub fn get_config() -> Result<BotConfig, ConfigError> {
     let token = settings.get_str("token").expect("Error getting token");
     let channel_ids = settings.get::<Vec<u64>>("channel_ids").expect("Error getting channel ids");
     let logfile = settings.get_str("logfile").expect("Error getting logfile");
+    let application_id = settings.get_str("application_id").expect("Error getting application id").parse::<u64>().unwrap();
 
-    let cfg = BotConfig { prefix, token, channel_ids, logfile };
+    let cfg = BotConfig { prefix, token, channel_ids, logfile, application_id };
 
     Ok(cfg)
 }

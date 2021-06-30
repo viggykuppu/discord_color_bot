@@ -6,31 +6,39 @@ mod color_name_map;
 pub mod bot_config;
 
 use std::error::Error;
-use serenity::client::Client;
-use serenity::model::{
-    channel::Message,
-    id::{
-        ChannelId,
-        GuildId,
-        RoleId,
-        UserId
-    },
-    gateway::{Ready, Activity },
-    guild::{ Role }
-};
-use serenity::prelude::{EventHandler, Context};
-use serenity::framework::standard::{
-    CommandResult,
-    CommandError,
-    StandardFramework,
-    macros::{
-        command,
-        group
-    }
-};
-use serenity::utils::Colour;
-use serenity::async_trait;
 use log::error;
+
+use serenity::{
+    async_trait,
+    client::{
+        Client,
+    },
+    framework::standard::{
+        CommandResult,
+        CommandError,
+        StandardFramework,
+        macros::{
+            command,
+            group
+        }
+    },
+    model::{
+        interactions::{
+            Interaction, InteractionResponseType
+        },
+        channel::Message,
+        gateway::{Ready, Activity },
+        guild::{ Role },
+        id::{
+            ChannelId,
+            GuildId,
+            RoleId,
+            UserId
+        }
+    },
+    prelude::{EventHandler, Context},
+    utils::Colour
+};
 
 #[group]
 #[commands(color, help)]
@@ -43,15 +51,27 @@ impl EventHandler for Handler {
     async fn ready(&self, ctx: Context, _: Ready) {
         ctx.set_activity(Activity::listening(&format!("{}help", &bot_config::CONFIG.prefix))).await;
     }
+
+    async fn interaction_create(&self, ctx: Context, interaction: Interaction)  {
+        interaction
+            .create_interaction_response(&ctx.http, |response| {
+                response
+                    .kind(InteractionResponseType::ChannelMessageWithSource)
+                    .interaction_response_data(|message| message.content("Received event!"))
+            })
+            .await;
+    }
 }
 
 pub async fn run() -> Result<(), serenity::Error> {
     let token = bot_config::CONFIG.token.clone();
     let prefix = bot_config::CONFIG.prefix.clone();
     let channel_ids = bot_config::CONFIG.channel_ids.iter().map(|id| ChannelId::from(*id) ).collect();
+    let application_id = bot_config::CONFIG.application_id.clone();
 
     let mut client = Client::builder(token)
         .event_handler(Handler)
+        .application_id(application_id)
         .framework(StandardFramework::new()
         .configure(|c| c.prefix(&prefix).allowed_channels(channel_ids))
         .group(&GENERAL_GROUP))
