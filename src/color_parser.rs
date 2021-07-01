@@ -3,13 +3,12 @@ use serenity::utils::Colour;
 use std::error;
 use std::fmt;
 
-pub fn parse_color(msg: &str) -> Result<Colour, ColorParseError> {   
-    let color_arg = get_color_arg(msg);
-    if let Some(color) = parse_hex_color(&color_arg) {
+pub fn parse_color(color_arg: &str) -> Result<Colour, ColorParseError> {   
+    if let Some(color) = parse_hex_color(color_arg) {
         return validate_color(color);
-    } else if let Some(color) = parse_name_color(&color_arg) {
+    } else if let Some(color) = parse_name_color(color_arg) {
         return validate_color(color);
-    } else if let Some(color) = parse_decimal_color(&color_arg) {
+    } else if let Some(color) = parse_decimal_color(color_arg) {
         return validate_color(color);   
     }
     Err(ColorParseError::InvalidColor)

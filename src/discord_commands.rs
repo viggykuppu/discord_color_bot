@@ -1,3 +1,4 @@
+use serenity::model::prelude::*;
 use crate::color_parser;
 use crate::bot_config;
 
@@ -19,7 +20,7 @@ use serenity::{
         },
         user::User
     },
-    prelude::{ Context},
+    prelude::*,
     utils::Colour
 };
 
@@ -35,72 +36,91 @@ You can also find the list of supported color names here: https://www.w3schools.
     Ok(())
 }
 
-async fn color(ctx: &Context, msg: &Message) -> CommandResult {
-    match color_parser::parse_color(&msg.content) {
+pub async fn set_color(ctx: &Context, color_arg: String, member: &mut Member) -> Result<(), Box<dyn Error>> {
+    match color_parser::parse_color(&color_arg) {
         Ok(color) => {
-            match user_has_existing_color_role(ctx, msg).await {
+            println!("Color: {:?}", color);
+            match user_has_existing_color_role(ctx, &member).await {
                 Some(role_id) => {
-                    if let Err(e) = update_existing_role_color(ctx, msg, &role_id, color).await {
+                    if let Err(e) = update_existing_role_color(ctx, &member, &role_id, color).await {
                         error!("Update existing role failed: {}", e);
+                    } else {
+
                     }
                 },
                 None => {
-                    if let Err(e) = create_and_attach_color_role(ctx, msg, color).await {
+                    if let Err(e) = create_and_attach_color_role(ctx, member, color).await {
                         error!("Create and attach new role failed: {}", e);
+                    } else {
+
                     }
                 }
             }
         },
         Err(e) => {
-            error!("Command: {}; Error: {}", msg.content, e);
-            match e {
-                color_parser::ColorParseError::InvalidColor => msg.reply(ctx,format!("I didn't understand the color you provided. Use the {}help command for info on what kind of colors I can accept.", bot_config::CONFIG.prefix)).await?,
-                color_parser::ColorParseError::InvalidGrey => msg.reply(ctx, "I'm sorry, but I'm not allowed to use that color").await?
-            };
-            return Err(CommandError::from("failed to set color"));
+            eprintln!("Command: {}; Error: {}", color_arg, e);
         }
     }
+    Ok(())
+}
+
+// async fn color(ctx: &Context, msg: &Message, interaction: &Interaction) -> CommandResult {
+//     match color_parser::parse_color(&msg.content) {
+//         Ok(color) => {
+//             match user_has_existing_color_role(ctx, msg).await {
+//                 Some(role_id) => {
+//                     if let Err(e) = update_existing_role_color(ctx, msg, &role_id, color).await {
+//                         error!("Update existing role failed: {}", e);
+//                     }
+//                 },
+//                 None => {
+//                     if let Err(e) = create_and_attach_color_role(ctx, msg, color).await {
+//                         error!("Create and attach new role failed: {}", e);
+//                     }
+//                 }
+//             }
+//         },
+//         Err(e) => {
+//             error!("Command: {}; Error: {}", msg.content, e);
+//             match e {
+//                 color_parser::ColorParseError::InvalidColor => msg.reply(ctx,format!("I didn't understand the color you provided. Use the {}help command for info on what kind of colors I can accept.", bot_config::CONFIG.prefix)).await?,
+//                 color_parser::ColorParseError::InvalidGrey => msg.reply(ctx, "I'm sorry, but I'm not allowed to use that color").await?
+//             };
+//             return Err(CommandError::from("failed to set color"));
+//         }
+//     }
     
-    msg.reply(ctx, "Done!").await?;
+//     msg.reply(ctx, "Done!").await?;
 
+//     Ok(())
+// }
+
+async fn update_existing_role_color(ctx: &Context, member: &Member, role_id: &RoleId, color: Colour) -> Result<(),Box<dyn Error>> {
+    edit_role(ctx, &member.guild_id, role_id, color).await?;
     Ok(())
 }
 
-async fn update_existing_role_color(ctx: &Context, msg: &Message, role_id: &RoleId, color: Colour) -> Result<(),Box<dyn Error>> {
-    if let Some(guild_id) = &msg.guild_id {
-        edit_role(ctx, guild_id, role_id, color).await?;
-    }
-    Ok(())
-}
-
-async fn create_and_attach_color_role(ctx: &Context, msg: &Message, color: Colour) -> Result<(),Box<dyn Error>> {
-    let name = &msg.author.name;
+async fn create_and_attach_color_role(ctx: &Context, member: &mut Member, color: Colour) -> Result<(),Box<dyn Error>> {
+    let name = member.display_name();
     let role_name = format!("{}'s color", name);
 
-    if let Some(guild_id) = &msg.guild_id {
-        let role = create_role(ctx, guild_id, &role_name, color).await?;
-        attach_role(ctx, msg, &msg.author.id, &role.id).await?;
-    }
+    let role = create_role(ctx, &member.guild_id, &role_name, color).await?;
+    attach_role(ctx, member, &role.id).await?;
 
     Ok(())
 }
 
-async fn user_has_existing_color_role(ctx: &Context, msg: &Message) -> Option<RoleId> {
-    if let Some(_guild) = msg.guild(&ctx).await {
-        // let guild = _guild.read();
-        let guild_roles = _guild.roles;
-        if let Some(member) = &msg.member {
-            let member_roles = &member.roles;
-            for role_id in member_roles {
-                if let Some(guild_role) = guild_roles.get(role_id) {
-                    if guild_role.name.contains("color") {
-                        return Some(guild_role.id);
-                    }
+async fn user_has_existing_color_role(ctx: &Context, member: &Member) -> Option<RoleId> {
+    if let Ok(guild_roles) = member.guild_id.roles(ctx).await {
+        let member_roles = &member.roles;
+        for role_id in member_roles {
+            if let Some(guild_role) = guild_roles.get(role_id) {
+                if guild_role.name.contains("color") {
+                    return Some(guild_role.id);
                 }
             }
         }
     }
-
     None
 }
 
@@ -116,14 +136,7 @@ async fn create_role(ctx: &Context, guild: &GuildId, name: &str, colour: Colour)
     Ok(role)
 }
 
-async fn attach_role(ctx: &Context, msg: &Message, user_id: &UserId, role_id: &RoleId) -> Result<(),Box<dyn Error>> {
-    if let Some(_guild) = msg.guild(&ctx).await {
-        // let guild = _guild.write();
-        let guild_members = &mut _guild.members(&ctx, Some(100), None).await?;
-        if let Some(member_to_attach_role) = guild_members.into_iter().find(|x| x.user.id.as_u64() == user_id.as_u64()) {
-            member_to_attach_role.add_role(ctx, role_id).await?;
-        }
-    }
-
+async fn attach_role(ctx: &Context, member: &mut Member, role_id: &RoleId) -> Result<(),Box<dyn Error>> {
+    member.add_role(ctx, role_id).await?;
     Ok(())
 }

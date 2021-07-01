@@ -6,7 +6,7 @@ use discord_name_color::bot_config;
 
 #[tokio::main]
 async fn main() {
-    if let Err(why) = WriteLogger::init(LevelFilter::Info, Config::default(), File::create(&bot_config::CONFIG.logfile).unwrap()) {
+    if let Err(why) = WriteLogger::init(LevelFilter::Warn, Config::default(), File::create(&bot_config::CONFIG.logfile).unwrap()) {
         eprintln!("Failed to intitialize logger: {:?}", why);
         process::exit(1);
     }
