@@ -84,7 +84,7 @@ async fn handle_color(ctx: &Context, interaction: &mut Interaction, command: App
         }
         if error {
             discord_commands::interaction_respond(ctx, &interaction, 
-                "Successfully done 🙃").await?;
+                "Beep boop I am now become error. Please tell my owner 🙃").await?;
         }
         discord_commands::interaction_respond(ctx, &interaction, 
             "Successfully done 🙃").await?;

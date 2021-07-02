@@ -67,37 +67,6 @@ pub async fn interaction_respond(ctx: &Context, interaction: &Interaction, msg: 
     Ok(())
 }
 
-// async fn color(ctx: &Context, msg: &Message, interaction: &Interaction) -> CommandResult {
-//     match color_parser::parse_color(&msg.content) {
-//         Ok(color) => {
-//             match user_has_existing_color_role(ctx, msg).await {
-//                 Some(role_id) => {
-//                     if let Err(e) = update_existing_role_color(ctx, msg, &role_id, color).await {
-//                         error!("Update existing role failed: {}", e);
-//                     }
-//                 },
-//                 None => {
-//                     if let Err(e) = create_and_attach_color_role(ctx, msg, color).await {
-//                         error!("Create and attach new role failed: {}", e);
-//                     }
-//                 }
-//             }
-//         },
-//         Err(e) => {
-//             error!("Command: {}; Error: {}", msg.content, e);
-//             match e {
-//                 color_parser::ColorParseError::InvalidColor => msg.reply(ctx,format!("I didn't understand the color you provided. Use the {}help command for info on what kind of colors I can accept.", bot_config::CONFIG.prefix)).await?,
-//                 color_parser::ColorParseError::InvalidGrey => msg.reply(ctx, "I'm sorry, but I'm not allowed to use that color").await?
-//             };
-//             return Err(CommandError::from("failed to set color"));
-//         }
-//     }
-    
-//     msg.reply(ctx, "Done!").await?;
-
-//     Ok(())
-// }
-
 async fn update_existing_role_color(ctx: &Context, member: &Member, role_id: &RoleId, color: Colour) -> Result<(),Box<dyn Error>> {
     edit_role(ctx, &member.guild_id, role_id, color).await?;
     Ok(())
