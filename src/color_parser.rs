@@ -68,16 +68,6 @@ fn parse_decimal_color(color_arg: &str) -> Option<Colour> {
     }
 }
 
-fn get_color_arg(msg: &str) -> String {
-    let mut chunks = msg.split_whitespace();
-    chunks.next();
-    chunks.fold(String::new(), |mut acc, s| {
-        acc.push_str(&s.to_lowercase());
-        return acc;
-    })
-}
-
-
 #[derive(Debug)]
 pub enum ColorParseError {
     InvalidColor,

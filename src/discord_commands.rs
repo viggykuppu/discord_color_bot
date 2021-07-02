@@ -1,22 +1,15 @@
 use serenity::model::prelude::*;
 use crate::color_parser;
-use crate::bot_config;
 
 use std::error::Error;
 
 use log::error;
 use serenity::{
-    framework::standard::{
-        CommandResult,
-        CommandError,
-    },
     model::{
-        channel::Message,
         guild::{ Role },
         id::{
             GuildId,
             RoleId,
-            UserId
         },
         user::User
     },

@@ -27,7 +27,6 @@ impl EventHandler for ColorBotHandler {
     }
 
     async fn interaction_create(&self, ctx: Context, mut interaction: Interaction)  {
-        // println!("{:?}",interaction);
         match interaction.kind {
             InteractionType::Ping => { 
                 if let Err(e) = interaction.create_interaction_response(&ctx.http, |response| {
@@ -76,13 +75,19 @@ async fn handle_help(ctx: &Context, interaction: &Interaction) -> Result<(),Box<
 }
 
 async fn handle_color(ctx: &Context, interaction: &mut Interaction, command: ApplicationCommandInteractionData) -> Result<(),Box<dyn Error>> {
-    println!("{:#?}",interaction);
     if let Some(member) = &mut interaction.member {
         let arg = command.options[0].value.as_ref();
         let color_arg = arg.unwrap().as_str().unwrap().to_string();
-        discord_commands::set_color(ctx, color_arg, member).await?;
+        let mut error = false;
+        if let Err(_) = discord_commands::set_color(ctx, color_arg, member).await {
+            error = true;
+        }
+        if error {
+            discord_commands::interaction_respond(ctx, &interaction, 
+                "Successfully done 🙃").await?;
+        }
         discord_commands::interaction_respond(ctx, &interaction, 
-            "Et voila! 🙃").await?;
+            "Successfully done 🙃").await?;
     } else {
         discord_commands::interaction_respond(ctx, &interaction, 
             "Please use the /setcolor command on a specific server; it doesn't work in DMs 🙃").await?;
