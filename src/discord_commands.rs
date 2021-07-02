@@ -64,6 +64,16 @@ pub async fn set_color(ctx: &Context, color_arg: String, member: &mut Member) ->
     Ok(())
 }
 
+pub async fn interaction_respond(ctx: &Context, interaction: &Interaction, msg: &str) -> Result<(),Box<dyn Error>> {
+    interaction.create_interaction_response(&ctx.http, |response| {
+        response
+            .kind(InteractionResponseType::ChannelMessageWithSource)
+            .interaction_response_data(|message| message.content(msg))
+    }).await?;
+
+    Ok(())
+}
+
 // async fn color(ctx: &Context, msg: &Message, interaction: &Interaction) -> CommandResult {
 //     match color_parser::parse_color(&msg.content) {
 //         Ok(color) => {
