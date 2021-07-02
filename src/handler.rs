@@ -70,11 +70,7 @@ async fn handle_help(ctx: &Context, interaction: &Interaction) -> Result<(),Box<
     };
     if let Some(u) = user {
         discord_commands::help(ctx, u).await?;
-        interaction.create_interaction_response(&ctx.http, |response| {
-            response
-                .kind(InteractionResponseType::ChannelMessageWithSource)
-                .interaction_response_data(|message| message.content("Check your DMs 🙃"))
-        }).await?;
+        discord_commands::interaction_respond(ctx, interaction, "Check your DMs 🙃").await?;
     }
     Ok(())
 }
@@ -85,18 +81,11 @@ async fn handle_color(ctx: &Context, interaction: &mut Interaction, command: App
         let arg = command.options[0].value.as_ref();
         let color_arg = arg.unwrap().as_str().unwrap().to_string();
         discord_commands::set_color(ctx, color_arg, member).await?;
-        interaction.create_interaction_response(&ctx.http, |response| {
-            response
-                .kind(InteractionResponseType::ChannelMessageWithSource)
-                .interaction_response_data(|message| message.content("Et voila! 🙃"))
-        }).await?;
+        discord_commands::interaction_respond(ctx, &interaction, 
+            "Et voila! 🙃").await?;
     } else {
-        discord_commands::interaction_respond(ctx, &interaction, "Please use the /setcolor command on a specific server; it doesn't work in DMs 🙃").await?;
-        // interaction.create_interaction_response(&ctx.http, |response| {
-        //     response
-        //         .kind(InteractionResponseType::ChannelMessageWithSource)
-        //         .interaction_response_data(|message| message.content("Please use the /setcolor command on a specific server; it doesn't work in DMs 🙃"))
-        // }).await?;
+        discord_commands::interaction_respond(ctx, &interaction, 
+            "Please use the /setcolor command on a specific server; it doesn't work in DMs 🙃").await?;
         error!("Failed to get member");
     };
     Ok(())
