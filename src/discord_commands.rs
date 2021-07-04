@@ -1,4 +1,4 @@
-use serenity::model::prelude::*;
+use serenity::{framework::standard::CommandError, model::prelude::*};
 use crate::color_parser;
 
 use std::error::Error;
@@ -36,21 +36,24 @@ pub async fn set_color(ctx: &Context, color_arg: String, member: &mut Member) ->
                 Some(role_id) => {
                     if let Err(e) = update_existing_role_color(ctx, &member, &role_id, color).await {
                         error!("Update existing role failed: {}", e);
-                    } else {
-
+                        return Err(e);
                     }
                 },
                 None => {
                     if let Err(e) = create_and_attach_color_role(ctx, member, color).await {
                         error!("Create and attach new role failed: {}", e);
-                    } else {
-
+                        return Err(e);
                     }
                 }
             }
         },
         Err(e) => {
             eprintln!("Command: {}; Error: {}", color_arg, e);
+            match e {
+                color_parser::ColorParseError::InvalidColor => {},
+                color_parser::ColorParseError::InvalidGrey => {}
+            };
+            return Err(CommandError::from("failed to set color"));
         }
     }
     Ok(())
