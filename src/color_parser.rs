@@ -55,10 +55,11 @@ fn parse_hex_color(color_arg: &str) -> Option<Colour> {
 }
 
 fn parse_name_color(color_arg: &str) -> Option<Colour> {
-    match color_name_map::COLOR_NAME_MAP.get::<str>(color_arg) {
-        Some(color_hex) => return parse_hex_color(color_hex),
-        None => return None
+    let arg_spaces_removed = &color_arg.split_whitespace().collect::<String>();
+    if let Some(color_hex) = color_name_map::COLOR_NAME_MAP.get::<str>(arg_spaces_removed) {
+        return parse_hex_color(color_hex)
     }
+    return None
 }
 
 fn parse_decimal_color(color_arg: &str) -> Option<Colour> {

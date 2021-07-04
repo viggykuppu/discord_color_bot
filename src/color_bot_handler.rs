@@ -23,7 +23,7 @@ pub struct ColorBotHandler;
 #[async_trait]
 impl EventHandler for ColorBotHandler {
     async fn ready(&self, ctx: Context, _: Ready) {
-        ctx.set_activity(Activity::listening("Mindfully Colouring")).await;
+        ctx.set_activity(Activity::watching("Mindfully Colouring")).await;
     }
 
     async fn interaction_create(&self, ctx: Context, mut interaction: Interaction)  {

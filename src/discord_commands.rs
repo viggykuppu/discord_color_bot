@@ -32,7 +32,6 @@ You can also find the list of supported color names here: https://www.w3schools.
 pub async fn set_color(ctx: &Context, color_arg: String, member: &mut Member) -> Result<(), Box<dyn Error>> {
     match color_parser::parse_color(&color_arg) {
         Ok(color) => {
-            println!("Color: {:?}", color);
             match user_has_existing_color_role(ctx, &member).await {
                 Some(role_id) => {
                     if let Err(e) = update_existing_role_color(ctx, &member, &role_id, color).await {
@@ -61,7 +60,11 @@ pub async fn interaction_respond(ctx: &Context, interaction: &Interaction, msg: 
     interaction.create_interaction_response(&ctx.http, |response| {
         response
             .kind(InteractionResponseType::ChannelMessageWithSource)
-            .interaction_response_data(|message| message.content(msg))
+            .interaction_response_data(|message| {
+                message
+                    .flags(InteractionApplicationCommandCallbackDataFlags::EPHEMERAL)
+                    .content(msg)
+            })
     }).await?;
 
     Ok(())
