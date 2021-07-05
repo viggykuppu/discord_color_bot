@@ -2,7 +2,7 @@ use std::process;
 use log::{error, LevelFilter};
 use simplelog::{WriteLogger, Config};
 use std::fs::File;
-use discord_name_color::bot_config;
+use discord_color_bot::bot_config;
 
 #[tokio::main]
 async fn main() {
@@ -10,7 +10,7 @@ async fn main() {
         eprintln!("Failed to intitialize logger: {:?}", why);
         process::exit(1);
     }
-    if let Err(why) = discord_name_color::run().await {
+    if let Err(why) = discord_color_bot::run().await {
         error!("An error occurred while starting the client: {:?}", why);
         process::exit(1);
     }

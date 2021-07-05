@@ -1,5 +1,5 @@
 [package]
-name = "discord_name_color"
+name = "discord_color_bot"
 version = "1.0.0"
 authors = ["Vignesh Kuppusamy <viggykuppu@gmail.com>"]
 edition = "2018"
